@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  name                String?
+  email               String               @unique
+  password            String
+  role                Role                 @default(CLIENT)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  albums              Album[]
+  clientProfile       ClientProfile?
+  photographerProfile PhotographerProfile?
+  purchases           Purchase[]
+}
+
+model PhotographerProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  brandName String
+  bio       String?
+  instagram String?
+  whatsapp  String?
+  qrisUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClientProfile {
+  id     String  @id @default(uuid())
+  userId String  @unique
+  name   String
+  phone  String?
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Album {
+  id             String        @id @default(uuid())
+  title          String
+  clientName     String?
+  photographerId String
+  createdAt      DateTime      @default(now())
+  status         AlbumStatus   @default(DRAFT)
+  description    String?
+  photographer   User          @relation(fields: [photographerId], references: [id])
+  accesses       AlbumAccess[]
+  photos         Photo[]
+  purchases      Purchase[]
+}
+
+model Photo {
+  id               String                @id @default(uuid())
+  albumId          String
+  previewUrl       String
+  highResUrl       String?
+  isPaid           Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+  originalUrl      String?
+  processingStatus PhotoProcessingStatus @default(UPLOADED)
+  album            Album                 @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  purchases        Purchase[]
+}
+
+model AlbumAccess {
+  id        String    @id @default(uuid())
+  albumId   String
+  token     String    @unique
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  album     Album     @relation(fields: [albumId], references: [id], onDelete: Cascade)
+}
+
+model Purchase {
+  id        String         @id @default(uuid())
+  buyerId   String
+  albumId   String?
+  photoId   String?
+  type      PurchaseType
+  status    PurchaseStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  expiredAt DateTime
+  payment   Payment?
+  album     Album?         @relation(fields: [albumId], references: [id])
+  buyer     User           @relation(fields: [buyerId], references: [id])
+  photo     Photo?         @relation(fields: [photoId], references: [id])
+}
+
+model Payment {
+  id         String        @id @default(uuid())
+  status     PaymentStatus @default(PENDING)
+  proofUrl   String?
+  purchaseId String        @unique
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  purchase   Purchase      @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  PHOTOGRAPHER
+  CLIENT
+}
+
+enum AlbumStatus {
+  DRAFT
+  PUBLISHED
+  COMPLETED
+}
+
+enum PhotoProcessingStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum PurchaseType {
+  ALBUM
+  PHOTO
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  PROOF_UPLOADED
+  REJECTED
+  EXPIRED
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
