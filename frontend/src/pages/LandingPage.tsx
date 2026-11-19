@@ -257,7 +257,7 @@ export default function LandingPage() {
           <div className="text-center mb-14">
             <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">Cara Kerja</p>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Sederhana. Aman. Efektif.
+              Sederhana  Aman Efektif.
             </h2>
           </div>
           <div className="relative space-y-0">
